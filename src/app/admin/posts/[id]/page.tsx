@@ -16,7 +16,7 @@ export default function EditPostsPage() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("https://placehold.jp/800x400.png");
+  const [thumbnailImageKey, setThumbnailImageKey] = useState("https://placehold.jp/800x400.png");
   const [categories, setCategories] = useState<Partial<Category>[]>([])
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +39,7 @@ export default function EditPostsPage() {
         const { post }: { post: Posts } = await res.json()
         setTitle(post.title)
         setContent(post.content)
-        setThumbnailUrl(post.thumbnailUrl)
+        setThumbnailImageKey(post.thumbnailImageKey)
         setCategories(post.postCategories.map((pc) => pc.category as Partial<Category>))
       } catch (error) {
         console.error("データ取得エラー：", error);
@@ -65,7 +65,7 @@ export default function EditPostsPage() {
       const body: UpdatePostRequestBody = {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
         categories: categoryIds, //
       };
 
@@ -121,8 +121,8 @@ export default function EditPostsPage() {
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
+        thumbnailImageKey={thumbnailImageKey}
+        setThumbnailImageKey={setThumbnailImageKey}
         categories={categories}
         setCategories={setCategories}
         onSubmit={handleUpdate}

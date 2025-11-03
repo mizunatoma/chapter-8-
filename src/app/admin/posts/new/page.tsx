@@ -12,7 +12,7 @@ export default function NewPostPage() {
   const router = useRouter();  // ページ遷都のリモコン
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState('https://placehold.jp/800x400.png');
+  const [thumbnailUrl, setThumbnailImageKey] = useState('https://placehold.jp/800x400.png');
   const [categories, setCategories] = useState<Partial<Category>[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { token } = useSupabaseSession()
@@ -63,7 +63,7 @@ export default function NewPostPage() {
         content={content}
         setContent={setContent}
         thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
+        setThumbnailImageKey={setThumbnailImageKey}
         categories={categories}
         setCategories={setCategories}        
         onSubmit={handleSubmit}

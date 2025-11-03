@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Category } from "@/app/_types";
 import { CategoriesSelect } from './CategoriesSelect'; 
 import { supabase } from '@/utils/supabase';
@@ -13,8 +13,8 @@ interface Props {
   setTitle: (title: string) => void
   content: string
   setContent: (content: string) => void
-  thumbnailUrl: string
-  setThumbnailUrl: (url: string) => void
+  thumbnailImageKey: string
+  setThumbnailImageKey: (url: string) => void
   categories: Partial<Category>[]
   setCategories: (categories: Partial<Category>[]) => void
   onSubmit: (e: React.FormEvent) => void
@@ -28,8 +28,8 @@ export const PostForm: React.FC<Props> = ({
   setTitle,
   content,
   setContent,
-  thumbnailUrl,
-  setThumbnailUrl,
+  thumbnailImageKey,
+  setThumbnailImageKey,
   categories,
   setCategories,
   onSubmit,
@@ -37,7 +37,6 @@ export const PostForm: React.FC<Props> = ({
   isSubmitting = false,
 }) => {
 
-const [thumbnailImageKey, setThumbnailImageKey] = useState('')
 const [thumbnailImageUrl, setThumbnailImageUrl] = useState<string | null>(null);
 
 
@@ -45,7 +44,7 @@ const [thumbnailImageUrl, setThumbnailImageUrl] = useState<string | null>(null);
 const handleImageChange = async (
   event: ChangeEvent<HTMLInputElement>,
 ): Promise<void> => {
-  if (!event.target.files || event.target.length === 0) {
+  if (!event.target.files || event.target.files.length === 0) {
     return // 画像が選択されていないのでreturn
   }
 
@@ -81,7 +80,6 @@ useEffect(() => {
       .getPublicUrl(thumbnailImageKey)
     
     setThumbnailImageUrl(publicUrl)
-    setThumbnailUrl(publicUrl);
   }
   fetcher()
 }, [thumbnailImageKey])
