@@ -7,7 +7,7 @@ import { Category } from '@/app/_types/Category'
 import { PostForm } from '../_components/PostForm'
 import type { UpdatePostRequestBody } from "@/app/api/admin/posts/[id]/route"; 
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-
+import useSWR from "swr";
 
 export default function EditPostsPage() {
   const { id } = useParams() as { id?: string };  // as { id?: string } は型推論の補助（id が一時的にundefinedの可能性もあるため）

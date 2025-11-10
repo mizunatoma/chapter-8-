@@ -5,7 +5,7 @@ import { CategoriesSelect } from './CategoriesSelect';
 import { supabase } from '@/utils/supabase';
 import { v4 as uuidv4 } from 'uuid';  // 固有IDを生成するライブラリ
 import Image from "next/image";
-
+import { useForm } from "react-hook-form"; // フォームの管理
 
 interface Props {
   mode: 'new' | 'edit'
