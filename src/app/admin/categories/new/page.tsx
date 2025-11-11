@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CategoryForm } from '../_components/CategoryForm';
 import type { CreateCategoryRequestBody } from '@/app/api/admin/categories/route';
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { mutate as globalMutate } from "swr";
 
 export default function NewCategoryPage() {
   const router = useRouter();
@@ -33,6 +34,9 @@ export default function NewCategoryPage() {
       });
 
       const { id } = await res.json();
+      
+      await globalMutate(["/api/admin/categories", token]);
+
       router.push(`/admin/categories/${id}`);
       alert("カテゴリーを作成しました");
     } catch (error) {

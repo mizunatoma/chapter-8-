@@ -1,41 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import type { Category } from "@/app/_types";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
-export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { token } = useSupabaseSession()
-
 // ===============================
 // GET
 // ===============================
-  useEffect(() => {
-    if (!token) return;
+export default function AdminCategoriesPage() {
+  const { token } = useSupabaseSession()
 
-    const fetcher = async () => {
-      try {
-        const res = await fetch("/api/admin/categories", {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token, // APIの利用制限
-          },
-        })
-        const data = await res.json();
-        setCategories(data.categories)
-      } catch (error) {
-        console.error("データ取得エラー：", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, [token]);
+  const { data: categories, error, isLoading, mutate } = useSWR(
+    token ? ["/api/admin/categories", token] : null, 
+    async ([url, token]) => {
+      const res =  await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
 
-  if (loading) return <p>読み込み中…</p>;
+      if (!res.ok) { throw new Error("カテゴリ取得に失敗しました")}
+      const { categories } = await res.json();
+      return categories as Category[];
+      
+    }
+  )
+
+  if (isLoading) return <p>読み込み中...</p>;
+  if (error) return <p>エラー: {error.message}</p>;
 
   return (
     <div>
@@ -50,7 +44,7 @@ export default function AdminCategoriesPage() {
       </div>
 
       <div>
-        {categories.map((category) => (
+        {categories?.map((category) => (
           <Link
             key={category.id}
             href={`/admin/categories/${category.id}`}

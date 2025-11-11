@@ -13,14 +13,14 @@ const fetcher = async (url: string, token: string) => {
     },
   });
 
-  if (!res.ok) {
-    throw new Error("データ取得に失敗しました");
-  }
-
+  if (!res.ok) { throw new Error("データ取得に失敗しました")}
   const data = await res.json();
   return data.posts as Posts[];
 };
 
+// ===============================
+// GET
+// ===============================
 export default function AdminPostsPage() {
   const { token } = useSupabaseSession();
   
@@ -30,7 +30,7 @@ export default function AdminPostsPage() {
   )
   
   if (isLoading) return <p>読み込み中...</p>;
-  if (error) return <p>エラーが発生しました...</p>;
+  if (error) return <p>エラー: {error.message}</p>;
 
   return (
     <div>
