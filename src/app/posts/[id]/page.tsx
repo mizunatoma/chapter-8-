@@ -4,11 +4,15 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Posts } from "@/app/_types";
+import { supabase } from '@/utils/supabase';
 
 export default function PostDetail() {
   const { id } = useParams(); 
   const [post, setPost] = useState<Posts | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [thumbnailImageKey, setThumbnailImageKey] = useState<string>("");
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetcher = async () => {
@@ -16,6 +20,7 @@ export default function PostDetail() {
         const res = await fetch(`/api/posts/${id}`)
         const data = await res.json()
         setPost(data.post) // PostsResponseのpost
+        setThumbnailImageKey(data.post.thumbnailImageKey ?? ""); // keyをstateに格納
       } catch (error) {
         console.error("データ取得エラー:", error);
       } finally {
@@ -25,14 +30,29 @@ export default function PostDetail() {
     fetcher();
   }, [id]); // idが変わるたびに再描画
 
+
+// ■ 3. Supabaseから画像URL取得
+  useEffect(() => {
+    if (!thumbnailImageKey) return
+
+    // ■ 2のアップロード処理のレスポンスで取得したthumbnailImageKeyを引数に、画像のURLを取得
+    const fetcher = async () => {
+      const { data: { publicUrl }} = await supabase.storage
+        .from(`post_thumbnail`)
+        .getPublicUrl(thumbnailImageKey)
+
+      setThumbnailImageUrl(publicUrl)
+    }
+    fetcher()
+  }, [thumbnailImageKey])
+
   if (loading) return <p>読み込み中...</p>
   if (!post) return <p className="text-red-600">記事が見つかりません</p>;
   
-
   return (
     <article className="max-w-3x1 mx-auto p-6">
       <Image
-        src={post.thumbnailUrl || "https://placehold.jp/800x400.png"}
+        src={thumbnailImageUrl || "https://placehold.jp/800x400.png"}
         alt={`${post.title}`}
         width={800}
         height={400}

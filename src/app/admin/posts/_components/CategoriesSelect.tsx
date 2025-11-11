@@ -9,6 +9,7 @@ import Chip from '@mui/material/Chip';  // 選択済みタグ表示
 import { SelectChangeEvent } from '@mui/material/Select' // Select の onChange イベント専用型。型推論の安全性を上げるために使用
 import { Category } from '@/app/_types/Category'
 import { useEffect } from 'react'
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 interface Props {
   selectedCategories: Partial<Category>[]    // 一部のデータ(id,name)だけでもOKに
@@ -23,6 +24,8 @@ export const CategoriesSelect: React.FC<Props> = ({
 }) => {
   const [categories, setCategories] = React.useState<Category[]>([])
 
+  const { token } = useSupabaseSession();
+
   const handleChange = (event: SelectChangeEvent<number[]>) => {
     const value = event.target.value as number[]
     const selected = categories.filter((c) => value.includes(c.id))
@@ -31,12 +34,18 @@ export const CategoriesSelect: React.FC<Props> = ({
 
   useEffect(() => {
     const fetcher = async () => {
-      const res = await fetch('/api/admin/categories')
+      if (!token) return
+      const res = await fetch('/api/admin/categories', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token, // API利用制限
+        },
+      })
       const { categories } = await res.json()
       setCategories(categories)
     }
     fetcher()
-  }, [])
+  }, [token])
 
 
   // multiple … 複数選択可能に

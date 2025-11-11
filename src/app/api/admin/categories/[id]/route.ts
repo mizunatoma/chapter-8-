@@ -2,8 +2,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { verifyAuth } from "@/app/api/_utils/verifyAuth";
 
-const prisma = new PrismaClient;
+const prisma = new PrismaClient();
 
 // ===============================
 // 詳細取得（GET）
@@ -13,6 +14,9 @@ export const GET = async (
   { params }: { params: { id: string } },
 ) => {
   const { id } = params;
+
+  const authError = await verifyAuth(request);
+  if (authError) return authError;
 
   try { 
     const category = await prisma.category.findUnique({
@@ -44,6 +48,9 @@ export const PUT = async (
   const body: UpdateCategoryRequestBody = await request.json();
   const { name } = body;
 
+  const authError = await verifyAuth(request);
+  if (authError) return authError;
+
   try {
     const category = await prisma.category.update({
       where: { id: parseInt(id) },
@@ -74,6 +81,9 @@ export const DELETE = async (
   { params }: { params: { id: string} },
 ) => {
   const { id } = params;
+
+  const authError = await verifyAuth(request);
+  if (authError) return authError;
 
   try {
     const category = await prisma.category.delete({

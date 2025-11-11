@@ -2,13 +2,17 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { verifyAuth } from "@/app/api/_utils/verifyAuth";
 
-const prisma = new PrismaClient;
+const prisma = new PrismaClient();
 
 // ===============================
 // 一覧取得（GET）
 // ===============================
 export const GET = async (request: NextRequest) => {
+  const authError = await verifyAuth(request);
+  if (authError) return authError;
+
   try {
     const categories = await prisma.category.findMany({
       orderBy:{
@@ -34,6 +38,9 @@ export interface CreateCategoryRequestBody {
 }
 
 export const POST = async (request: NextRequest) => {
+  const authError = await verifyAuth(request);
+  if (authError) return authError;
+
   try {
     const body: CreateCategoryRequestBody = await request.json();
     const { name } = body;
