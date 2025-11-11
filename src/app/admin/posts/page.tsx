@@ -1,41 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { Posts } from "@/app/_types"
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
+const fetcher = async (url: string, token: string) => {
+  const res = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("データ取得に失敗しました");
+  }
+
+  const data = await res.json();
+  return data.posts as Posts[];
+};
+
 export default function AdminPostsPage() {
-  const [posts, setPosts] = useState<Posts[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { token } = useSupabaseSession()
-
-// ===============================
-// GET
-// ===============================
-  useEffect(() => {
-    if (!token) return;
-
-    const fetcher = async () => {
-      try {
-        const res = await fetch("/api/admin/posts", {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token, // 👈 Header に token を付与 (=APIの利用制限)
-          },
-        })
-        const data = await res.json()
-        setPosts(data.posts)
-      } catch (error) {
-        console.error("データ取得エラー：", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetcher()
-  }, [token]);
-
-  if (loading) return <p>読み込み中...</p>;
+  const { token } = useSupabaseSession();
+  
+  const { data: posts, error, isLoading, mutate } = useSWR(
+    token ? ["/api/admin/posts", token] : null, 
+    ([url, token]) => fetcher(url, token)
+  )
+  
+  if (isLoading) return <p>読み込み中...</p>;
+  if (error) return <p>エラーが発生しました...</p>;
 
   return (
     <div>
@@ -50,7 +45,7 @@ export default function AdminPostsPage() {
       </div>
 
       <div>
-        {posts.map((post) => (
+        {posts?.map((post) => (
           <Link 
             key={post.id} 
             href={`/admin/posts/${post.id}`}
