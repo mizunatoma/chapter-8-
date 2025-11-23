@@ -1,36 +1,20 @@
 "use client";
 
-import useSWR from "swr";
 import Link from "next/link";
 import type { Category } from "@/app/_types";
-import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { useFetch } from "@/app/_hooks/useFetch";
 
 // ===============================
 // GET
 // ===============================
 export default function AdminCategoriesPage() {
-  const { token } = useSupabaseSession()
-
-  const { data: categories, error, isLoading, mutate } = useSWR(
-    token ? ["/api/admin/categories", token] : null, 
-    async ([url, token]) => {
-      const res =  await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-      });
-
-      if (!res.ok) { throw new Error("カテゴリ取得に失敗しました")}
-      const { categories } = await res.json();
-      return categories as Category[];
-      
-    }
-  )
+  const { data, error, isLoading } = useFetch<{ categories: Category[] }>("/api/admin/categories");
 
   if (isLoading) return <p>読み込み中...</p>;
   if (error) return <p>エラー: {error.message}</p>;
 
+  const categories = data?.categories ?? [];
+  
   return (
     <div>
       <div className="flex justify-between items-center">

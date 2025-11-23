@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Category } from "@/app/_types"
+import type { Category, Posts } from "@/app/_types";
 import { PostForm } from '../_components/PostForm'
 import type { CreatePostRequestBody } from "@/app/api/admin/posts/route"; 
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import useSWR from "swr";
+import { useFetch } from "@/app/_hooks/useFetch";
 
 export default function NewPostPage() {
   const router = useRouter();  // ページ遷都のリモコン
@@ -17,23 +17,7 @@ export default function NewPostPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { token } = useSupabaseSession()
 
-
-//一覧のSWRキャッシュへアクセス（mutateのためだけに呼ぶ）
-// key: token取得前は null → フェッチ抑止 / 取得後は [url, token]
-const { mutate } =useSWR(
-  token ? ["/api/admin/posts", token] : null,
-  async ([url, tkn]) => {  // ← 最小のfetcher（このページではdataは使わない）
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: tkn,
-      },
-    });
-    if (!res.ok) throw new Error("一覧取得に失敗しました");
-    const json = await res.json();
-    return json.posts;
-  }
-);
+  const { mutate } = useFetch<{ posts: Posts[] }>("/api/admin/posts");
 
 // ===============================
 // POST (create)

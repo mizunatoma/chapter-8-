@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { Posts } from "@/app/_types/";
 import { Category } from '@/app/_types/Category'
 import { PostForm } from '../_components/PostForm'
 import type { UpdatePostRequestBody } from "@/app/api/admin/posts/[id]/route"; 
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import useSWR, { mutate as globalMutate } from "swr";
+import { mutate as globalMutate } from "swr";
+import { useFetch } from "@/app/_hooks/useFetch";
 
 export default function EditPostsPage() {
   const { id } = useParams() as { id?: string };  // as { id?: string } は型推論の補助（id が一時的にundefinedの可能性もあるため）
@@ -24,29 +25,24 @@ export default function EditPostsPage() {
 // ===============================
 // GET
 // ===============================
-  const { data: post, error, isLoading, mutate } = useSWR(
-    token && id ? [`/api/admin/posts/${id}`, token] : null,
-    async ([url, tkn]) => {
-      const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: tkn,
-      },
-    });
-    if (!res.ok) throw new Error("データ取得に失敗しました");
-    const { post } = await res.json();
-    return post as Posts;
-    }
+  const { data, error, isLoading, mutate } = useFetch<{ post: Posts }>(
+    id ? `/api/admin/posts/${id}` : null
   );
 
-  // 初回データ反映（フォームへセット）
-  // SWRのdata → useStateに一度コピー → 以後はuseStateで管理
-  if (post && title === "" && content === "") {
-  setTitle(post.title);
-  setContent(post.content);
-  setThumbnailImageKey(post.thumbnailImageKey);
-  setCategories(post.postCategories.map((pc) => pc.category as Partial<Category>));
-}
+  const post = data?.post;
+
+  // 初回データ反映
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  useEffect(() => {
+    if (!post || isInitialized) return;
+      setTitle(post.title);
+      setContent(post.content);
+      setThumbnailImageKey(post.thumbnailImageKey);
+      setCategories(post.postCategories.map((pc) => pc.category as Partial<Category>));
+
+      setIsInitialized(true);
+    }, [post, isInitialized]);
 
 // ===============================
 // PUT (update)
