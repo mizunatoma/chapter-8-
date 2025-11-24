@@ -1,25 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Posts } from "@/app/_types";
-import useSWR from 'swr';
-
-// fetcher関数: SWRがurlを自動で渡してくる
-// useSWRの外で定義する
-const fetcher = async (url: string) => {
-  const res = await fetch(url); // urlはSWRがくれる
-  if(!res.ok) throw new Error("APIエラー");
-  return res.json(); // Jsonデータを返す
-};
+import type { Posts } from "@/app/_types";
+import { useFetch } from "@/app/_hooks/useFetch";
 
 export default function PostList() {
   // SWRでデータ取得
-  const { data, error, isLoading } = useSWR('/api/posts', fetcher);
+  const { data, error, isLoading } = useFetch<{ posts: Posts[] }>("/api/posts");
 
   if (isLoading) return <p>読み込み中...</p>;
   if (error) return <p>読み込みエラー</p>;
   
-  const posts: Posts[] = data.posts;
+  const posts = data?.posts ?? []; // SWR は data が最初 undefined になる
 
   return (
     <div>
