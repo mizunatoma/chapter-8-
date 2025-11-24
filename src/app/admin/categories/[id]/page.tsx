@@ -1,53 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import type { Category } from "@/app/_types";
 import { CategoryForm } from '../_components/CategoryForm'
 import type { UpdateCategoryRequestBody } from "@/app/api/admin/categories/[id]/route";
-
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { mutate as globalMutate } from "swr";
+import { useFetch } from "@/app/_hooks/useFetch";
+import type { Category } from "@/app/_types";
 
 export default function EditCategoriesPage() {
   const { id } = useParams() as { id?: string };
+  const { token } = useSupabaseSession()
   const router = useRouter();
 
-  const [category, setCategory] = useState<Category | null>(null);
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 // ===============================
 // GET
 // ===============================
+  const { data, error, isLoading, mutate } = useFetch<{ category: Category }>(
+    id ? `/api/admin/categories/${id}` : null
+  );
+  
+  const category = data?.category;
+
+  // 初回データ反映（フォーム用）
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
-    const fetcher = async () => {
-      try {
-        const res = await fetch(`/api/admin/categories/${id}`);
-        const { category }: { category: Category } = await res.json()
-        setCategory(category);
-        setName(category.name);
-      } catch (error) {
-        console.error("データ取得エラー：", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, [id]);
+    if (!category || isInitialized) return;
+    setName(category.name)
+    setIsInitialized(true);
+  }, [category, isInitialized]);
 
 // ===============================
 // PUT (update)
 // ===============================
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return
     setIsSubmitting(true);
+
     try {
       const body: UpdateCategoryRequestBody = { name };
-      await fetch(`/api/admin/categories/${id}`, {
+      const res = await fetch(`/api/admin/categories/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" ,
+        Authorization: token, // APIの利用制限
+        },
         body: JSON.stringify(body),
       });
+
+      if (!res.ok) throw new Error("更新に失敗しました");
+
+      await mutate(); // カテゴリキャッシュ更新
+      await globalMutate(["/api/admin/categories", token]); // 一覧キャッシュも更新
+
       alert("更新しました");
       router.push("/admin/categories")
     } catch (error) {
@@ -63,19 +73,33 @@ export default function EditCategoriesPage() {
   const handleDelete = async () => {
     if (!confirm("カテゴリーを削除しますか？")) return;
     setIsSubmitting(true);
+    if (!token) return
+
     try {
-      await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/categories/${id}`, { 
+        method: "DELETE",
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token, // APIの利用制限
+        },
+      });
+
+      if (!res.ok) throw new Error("削除に失敗しました");
+
+      await globalMutate(["/api/admin/categories", token]);
+
       alert("削除しました");
       router.push("/admin/categories");
     } catch (error) {
-        console.error("データ削除エラー：", error);
+        console.error("カテゴリー削除エラー：", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (loading) return <p>読み込み中…</p>;
-  if (!category) return <p className="text-red-600">カテゴリーが見つかりません</p>;
+  if (isLoading) return <p>読み込み中…</p>;
+  if (error) return <p>エラーが発生しました</p>;
+  if (!category) return <p>カテゴリーが見つかりません</p>;
 
   return (
     <div>

@@ -1,32 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useFetch } from "@/app/_hooks/useFetch";
 import Link from "next/link";
 import { Posts } from "@/app/_types"
-
-export default function AdminPostsPage() {
-  const [posts, setPosts] = useState<Posts[]>([]);
-  const [loading, setLoading] = useState(true);
 
 // ===============================
 // GET
 // ===============================
-  useEffect(() => {
-    const fetcher = async () => {
-      try {
-        const res = await fetch("/api/admin/posts")
-        const data = await res.json()
-        setPosts(data.posts)
-      } catch (error) {
-        console.error("データ取得エラー：", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetcher()
-  }, []);
+export default function AdminPostsPage() {
+  const { data, error, isLoading } = useFetch<{ posts: Posts[] }>(
+    "/api/admin/posts"
+  );
+  
+  if (isLoading) return <p>読み込み中...</p>;
+  if (error) return <p>エラー: {error.message}</p>;
 
-  if (loading) return <p>読み込み中...</p>;
+  const posts = data?.posts ?? [];
 
   return (
     <div>
@@ -41,7 +30,7 @@ export default function AdminPostsPage() {
       </div>
 
       <div>
-        {posts.map((post) => (
+        {posts?.map((post) => (
           <Link 
             key={post.id} 
             href={`/admin/posts/${post.id}`}

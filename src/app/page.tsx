@@ -1,29 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Posts } from "@/app/_types";
+import type { Posts } from "@/app/_types";
+import { useFetch } from "@/app/_hooks/useFetch";
 
 export default function PostList() {
-  const [posts, setPosts] = useState<Posts[]>([]);
-  const [loading, setLoading] = useState(true);
+  // SWRでデータ取得
+  const { data, error, isLoading } = useFetch<{ posts: Posts[] }>("/api/posts");
 
-  useEffect(() => {
-    const fetcher = async () => {
-      try {
-        const res = await fetch("/api/posts") // 認証もネット越えも不要なので、キーもヘッダーも不要
-        const data = await res.json() // JSON形式に変換
-        setPosts(data.posts) // APIでreturnしてるposts
-      } catch (error) {
-        console.error("データ取得エラー:", error);
-      } finally {
-        setLoading(false); // 読み込み完了
-      }
-    }
-    fetcher()
-  }, [])
-
-  if (loading) return <p>読み込み中...</p>;
+  if (isLoading) return <p>読み込み中...</p>;
+  if (error) return <p>読み込みエラー</p>;
+  
+  const posts = data?.posts ?? []; // SWR は data が最初 undefined になる
 
   return (
     <div>

@@ -1,33 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Category } from "@/app/_types";
-
-export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+import { useFetch } from "@/app/_hooks/useFetch";
 
 // ===============================
 // GET
 // ===============================
-  useEffect(() => {
-    const fetcher = async () => {
-      try {
-        const res = await fetch("/api/admin/categories");
-        const data = await res.json();
-        setCategories(data.categories)
-      } catch (error) {
-        console.error("データ取得エラー：", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, []);
+export default function AdminCategoriesPage() {
+  const { data, error, isLoading } = useFetch<{ categories: Category[] }>("/api/admin/categories");
 
-  if (loading) return <p>読み込み中…</p>;
+  if (isLoading) return <p>読み込み中...</p>;
+  if (error) return <p>エラー: {error.message}</p>;
 
+  const categories = data?.categories ?? [];
+  
   return (
     <div>
       <div className="flex justify-between items-center">
@@ -41,7 +28,7 @@ export default function AdminCategoriesPage() {
       </div>
 
       <div>
-        {categories.map((category) => (
+        {categories?.map((category) => (
           <Link
             key={category.id}
             href={`/admin/categories/${category.id}`}

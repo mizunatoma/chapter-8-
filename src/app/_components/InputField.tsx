@@ -1,10 +1,10 @@
 "use client";
 import React from "react";
+import { UseFormRegisterReturn } from 'react-hook-form'
 
 type InputFieldProps = {
   label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  register: UseFormRegisterReturn // react-hook-formのregisterを直接受け取る
   error?: string;
   disabled?: boolean;
   type?: string;
@@ -13,8 +13,7 @@ type InputFieldProps = {
 export default function InputField({
   label,
   type="text",
-  value,
-  onChange,
+  register,
   error,
   disabled = false,
 }: InputFieldProps) {
@@ -23,9 +22,8 @@ export default function InputField({
       <label className="block font-medium text-gray-700">{label}</label>
       <input
         type={type}
-        value={value}
+        {...register} // react-hook-formがvalueとonChangeを紐づける
         disabled={disabled}
-        onChange={onChange}
         className="mt-1 block w-full border border-gray-300 rounded shadow-sm p-2 focus:border-blue-500 focus:ring focus:ring-blue-200"
       />
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}

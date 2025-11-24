@@ -2,10 +2,15 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation"; //現在のURLパスを取得できるフック
+import { useRouteGuard } from '@/app/_hooks/useRouteGuard';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  // 現在のパスを取得
-  const pathname = usePathname();
+  useRouteGuard()
+
+  const pathname = usePathname()
+  const isSelected = (href: string) => {
+    return pathname.includes(href)
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -16,6 +21,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <Link 
               href="/admin/posts"
               className={`p-2 rounded ${
+                isSelected('/admin/categories') && 'bg-blue-100',
                 pathname === "/admin/posts"
                 ? "bg-blue-100 text-blue-600 font-bold"
                 : "hover:bg-gray-200"
@@ -26,6 +32,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <Link
               href="/admin/categories"
               className={`p-2 rounded ${
+                isSelected('/admin/categories') && 'bg-blue-100',
                 pathname === "/admin/categories"
                   ? "bg-blue-100 text-blue-600 font-bold"
                   : "hover:bg-gray-200"
