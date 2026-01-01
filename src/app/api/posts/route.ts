@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient()
 
-export const GET = async (_request: NextRequest) => {
+export const GET = async ( request: NextRequest) => {
   try {
     // Postを取ってくるときに、中間テーブル（PostCategory）と、その先のCategory情報もまとめて持ってくる
     const posts = await prisma.post.findMany({
@@ -22,17 +22,18 @@ export const GET = async (_request: NextRequest) => {
         },
       },
       orderBy: {
-        createdAt: 'desc' ,
+        createdAt: 'desc',
       },
     })
 
     // バックエンドのコンソール画面でログ出力・確認
-    // console.log(posts)
+    console.log(posts)
 
     return NextResponse.json({ status: 'OK', posts: posts }, { status: 200 })
   } catch (error) {
-    if (error instanceof Error)
-      return NextResponse.json({ status: 'error.message' }, { status: 400 })
+    if (error instanceof Error) {
+      return NextResponse.json({ status: error.message }, { status: 400 })
+    }
   }
 }
 
